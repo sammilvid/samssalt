@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order - SAM'S SALT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    :root {
+      --teal: #66B3A9;
+      --cream: #f9ecd7;
+      --dark-teal: #0F4F57;
+      --black: #000000;
+      --dark-gray: #111111;
+      --light-gray: #333333;
+      --white: #ffffff;
+      --accent: #00d4ff;
+      --gradient-1: linear-gradient(135deg, var(--teal) 0%, var(--accent) 100%);
+      --gradient-2: linear-gradient(45deg, var(--dark-teal) 0%, var(--teal) 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      line-height: 1.6;
+      padding-top: 80px;
+      overflow-x: hidden;
+    }
+
+    /* 3D Background Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      opacity: 0.3;
+    }
+
+    /* Mountain Background */
+    .mountain-background {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50vh;
+      z-index: -1;
+      opacity: 0.1;
+      background: url('mountain-city-illustration.svg') repeat-x center bottom;
+      background-size: cover;
+      pointer-events: none;
+      filter: blur(0.5px);
+    }
+
+    /* Header Styles */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--teal);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--teal);
+      text-decoration: none;
+      letter-spacing: 2px;
+    }
+
+    .hamburger {
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 8px;
+      background: rgba(102, 179, 169, 0.1);
+      border: 2px solid var(--teal);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .hamburger:hover {
+      background: rgba(102, 179, 169, 0.3);
+      transform: scale(1.05);
+    }
+
+    .hamburger span {
+      width: 25px;
+      height: 3px;
+      background: var(--teal);
+      margin: 3px 0;
+      transition: 0.3s;
+      border-radius: 2px;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px);
+    }
+
+    .nav-menu {
+      position: fixed;
+      top: 80px;
+      left: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--teal);
+      z-index: 999;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+      display: block;
+    }
+
+    .nav-menu.open {
+      transform: translateY(0);
+    }
+
+    .nav-menu a {
+      display: block;
+      color: var(--teal);
+      text-decoration: none;
+      padding: 15px 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(102, 179, 169, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .nav-menu a:hover {
+      background: rgba(102, 179, 169, 0.1);
+      color: var(--dark-teal);
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .product-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+      margin-bottom: 60px;
+    }
+
+    .product-image-section {
+      text-align: center;
+    }
+
+    .product-image {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(102, 179, 169, 0.3);
+      transition: transform 0.3s ease;
+      border: 2px solid rgba(102, 179, 169, 0.2);
+    }
+
+    .product-image:hover {
+      transform: scale(1.05);
+      box-shadow: 0 20px 40px rgba(102, 179, 169, 0.4);
+      border-color: var(--teal);
+    }
+
+    .product-details {
+      padding: 20px 0;
+    }
+
+
+
+    .product-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--black);
+      margin-bottom: 25px;
+    }
+
+
+
+    .product-description {
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+
+
+
+    .purchase-options {
+      border: 2px solid rgba(102, 179, 169, 0.3);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 25px;
+      background: rgba(102, 179, 169, 0.05);
+      backdrop-filter: blur(10px);
+    }
+
+    .purchase-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 0;
+      border-bottom: 1px solid rgba(102, 179, 169, 0.2);
+    }
+
+    .purchase-option:last-child {
+      border-bottom: none;
+    }
+
+    .option-details {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+
+
+    .option-label {
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .option-price {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+
+
+
+    .quantity-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      border: 2px solid rgba(102, 179, 169, 0.3);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .quantity-btn {
+      background: rgba(102, 179, 169, 0.1);
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--teal);
+      transition: background 0.3s ease;
+    }
+
+    .quantity-btn:hover {
+      background: rgba(102, 179, 169, 0.2);
+    }
+
+    .quantity-input {
+      border: none;
+      padding: 10px 15px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      width: 60px;
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .add-to-cart-btn {
+      width: 100%;
+      background: var(--gradient-1);
+      color: var(--black);
+      border: none;
+      padding: 18px 30px;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 10px 30px rgba(102, 179, 169, 0.3);
+    }
+
+    .add-to-cart-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 40px rgba(102, 179, 169, 0.4);
+    }
+
+    /* Stripe Checkout Modal */
+    .stripe-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .stripe-modal.active {
+      display: flex;
+    }
+
+    .stripe-modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .stripe-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .stripe-modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333;
+      margin: 0;
+    }
+
+    .stripe-modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 5px;
+      transition: color 0.3s ease;
+    }
+
+    .stripe-modal-close:hover {
+      color: #333;
+    }
+
+    .order-summary {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .order-item:last-child {
+      margin-bottom: 0;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+      font-weight: 600;
+    }
+
+    .order-item-name {
+      color: #333;
+    }
+
+    .order-item-price {
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    #payment-element {
+      margin-bottom: 20px;
+    }
+
+    .stripe-pay-button {
+      width: 100%;
+      background: var(--gradient-1);
+      color: var(--black);
+      border: none;
+      padding: 15px 30px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stripe-pay-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 179, 169, 0.3);
+    }
+
+    .stripe-pay-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .payment-message {
+      text-align: center;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .payment-message.error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .payment-message.success {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+
+
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      header {
+        padding: 0 20px;
+      }
+
+      .product-section {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .product-title {
+        font-size: 2rem;
+      }
+
+      .container {
+        padding: 20px 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        font-size: 1.5rem;
+      }
+
+      .product-title {
+        font-size: 1.8rem;
+      }
+
+      .purchase-options {
+        padding: 20px;
+      }
+
+      .option-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  
+  <!-- Mountain Background -->
+  <div class="mountain-background"></div>
+  
+  <!-- Header -->
+  <header>
+    <a href="index.html" class="logo">SAM'S SALT</a>
+    <button id="hamburger" onclick="toggleMenu()" class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+
+  <!-- Navigation Menu -->
+  <div id="nav-menu" class="nav-menu">
+    <a href="index.html" onclick="closeMenu()">Home</a>
+    <a href="order.html" onclick="closeMenu()">Order Now</a>
+    <a href="calculator.html" onclick="closeMenu()">Sodium Calculator</a>
+    <a href="contact.html" onclick="closeMenu()">Contact</a>
+  </div>
+
+  <div class="container">
+    <div class="product-section">
+      <!-- Product Image -->
+      <div class="product-image-section">
+        <img src="productimagewhite.png" alt="SAM'S SALT Lime Electrolyte Drink Mix" class="product-image">
+      </div>
+
+      <!-- Product Details -->
+      <div class="product-details">
+        <h1 class="product-title">SAM'S SALT Lime Electrolyte Mix</h1>
+
+        <p class="product-description">
+          Unleash your potential with our Lime Electrolyte Formula. This expertly balanced mix is designed to quickly restore vital electrolytes lost through sweat, preventing dehydration and muscle cramps. Its bright, natural lime flavor offers a refreshing taste that encourages consistent hydration. Ideal for post-workout recovery, hot weather, or everyday wellness.
+        </p>
+
+
+
+                <div class="purchase-options">
+          <div class="purchase-option">
+            <div class="option-details">
+              <label for="one-time" class="option-label">One-Time Purchase</label>
+            </div>
+            <div class="option-price">$24.99</div>
+          </div>
+        </div>
+
+        <div class="quantity-section">
+          <div class="quantity-controls">
+            <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+            <input type="number" value="1" min="1" class="quantity-input" id="quantity">
+            <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+          </div>
+        </div>
+
+        <button class="add-to-cart-btn" onclick="initiateCheckout()">Pre Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stripe Checkout Modal -->
+  <div id="stripe-modal" class="stripe-modal">
+    <div class="stripe-modal-content">
+      <div class="stripe-modal-header">
+        <h3 class="stripe-modal-title">Complete Your Pre-Order</h3>
+        <button class="stripe-modal-close" onclick="closeStripeModal()">&times;</button>
+      </div>
+      
+      <div class="order-summary">
+        <div class="order-item">
+          <span class="order-item-name">SAM'S SALT Lime (Qty: <span id="checkout-quantity">1</span>)</span>
+          <span class="order-item-price">$<span id="checkout-subtotal">24.99</span></span>
+        </div>
+        <div class="order-item">
+          <span class="order-item-name">Total</span>
+          <span class="order-item-price">$<span id="checkout-total">24.99</span></span>
+        </div>
+      </div>
+
+      <form id="payment-form">
+        <div id="payment-element">
+          <!-- Stripe Elements will create form elements here -->
+        </div>
+                 <button id="submit-payment" class="stripe-pay-button">
+           <span id="button-text">Complete Pre-Order</span>
+         </button>
+         <div id="payment-message" class="payment-message">
+           <div id="demo-notice" style="font-size: 0.9rem; color: #666; text-align: center; margin-top: 10px;">
+             Payment form is ready. Backend server required for processing.
+           </div>
+         </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Stripe
+    const stripe = Stripe('pk_live_51RkRc6HXrWYMXM0xJ6OndmJcGgNkxgUb4w9I3IIycPxqx5cvRSMog5ftX54qTmaore5ba4o6UT4Jgq6A7NvQRfdk005NZ12KLT');
+    let elements;
+    let paymentElement;
+
+    function toggleMenu() {
+      const hamburger = document.getElementById('hamburger');
+      const navMenu = document.getElementById('nav-menu');
+      
+      if (hamburger && navMenu) {
+        const isOpen = navMenu.classList.contains('open');
+        
+        if (isOpen) {
+          navMenu.classList.remove('open');
+          hamburger.classList.remove('active');
+        } else {
+          navMenu.classList.add('open');
+          hamburger.classList.add('active');
+        }
+      }
+    }
+
+    function closeMenu() {
+      const hamburger = document.getElementById('hamburger');
+      const navMenu = document.getElementById('nav-menu');
+      
+      if (hamburger && navMenu) {
+        navMenu.classList.remove('open');
+        hamburger.classList.remove('active');
+      }
+    }
+
+    function changeQuantity(change) {
+      const quantityInput = document.getElementById('quantity');
+      const currentValue = parseInt(quantityInput.value);
+      const newValue = currentValue + change;
+      
+      if (newValue >= 1) {
+        quantityInput.value = newValue;
+      }
+    }
+
+    function updateCheckoutSummary() {
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const unitPrice = 24.99;
+      const total = quantity * unitPrice;
+      
+      document.getElementById('checkout-quantity').textContent = quantity;
+      document.getElementById('checkout-subtotal').textContent = total.toFixed(2);
+      document.getElementById('checkout-total').textContent = total.toFixed(2);
+    }
+
+    async function initiateCheckout() {
+      updateCheckoutSummary();
+      
+      // Show the modal
+      document.getElementById('stripe-modal').classList.add('active');
+      
+      // Create payment intent
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const amount = Math.round(quantity * 24.99 * 100); // Convert to cents
+      
+      try {
+        const response = await fetch('/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: amount,
+            quantity: quantity
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Backend not available');
+        }
+        
+        const { client_secret } = await response.json();
+        initializeStripeElements(client_secret);
+        
+      } catch (error) {
+        console.log('Backend not available, initializing Stripe Elements directly');
+        initializeStripeElementsWithoutBackend(amount);
+      }
+    }
+
+    function initializeStripeElements(clientSecret) {
+      console.log('Initializing Stripe Elements with client secret');
+      
+      elements = stripe.elements({
+        clientSecret: clientSecret,
+        appearance: {
+          theme: 'stripe',
+          variables: {
+            colorPrimary: '#66B3A9',
+            colorBackground: '#ffffff',
+            colorText: '#333333',
+            colorDanger: '#dc2626',
+            fontFamily: 'Montserrat, sans-serif',
+            borderRadius: '8px'
+          }
+        }
+      });
+
+      paymentElement = elements.create('payment');
+      paymentElement.mount('#payment-element')
+        .then(() => {
+          console.log('Payment element mounted successfully');
+        })
+        .catch((error) => {
+          console.error('Error mounting payment element:', error);
+          showMessage('Error initializing payment form. Please refresh and try again.');
+        });
+    }
+
+    function initializeStripeElementsWithoutBackend(amount) {
+      console.log('Initializing Stripe Elements without backend, amount:', amount);
+      
+      // Initialize Stripe Elements for demo/collection mode
+      elements = stripe.elements({
+        mode: 'payment',
+        amount: amount,
+        currency: 'usd',
+        appearance: {
+          theme: 'stripe',
+          variables: {
+            colorPrimary: '#66B3A9',
+            colorBackground: '#ffffff',
+            colorText: '#333333',
+            colorDanger: '#dc2626',
+            fontFamily: 'Montserrat, sans-serif',
+            borderRadius: '8px'
+          }
+        }
+      });
+
+      paymentElement = elements.create('payment');
+      paymentElement.mount('#payment-element')
+        .then(() => {
+          console.log('Payment element mounted successfully');
+        })
+        .catch((error) => {
+          console.error('Error mounting payment element:', error);
+          showMessage('Error initializing payment form. Please refresh and try again.');
+        });
+    }
+
+    function closeStripeModal() {
+      document.getElementById('stripe-modal').classList.remove('active');
+      showMessage('');
+      
+      // Cleanup Stripe elements
+      if (paymentElement) {
+        paymentElement.unmount();
+        paymentElement = null;
+      }
+      elements = null;
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      setLoading(true);
+
+      if (!elements) {
+        showMessage('Payment form not initialized. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Check if we have a backend by trying to create a payment intent
+      try {
+        const quantity = parseInt(document.getElementById('quantity').value);
+        const amount = Math.round(quantity * 24.99 * 100);
+        
+        const response = await fetch('/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: amount,
+            quantity: quantity
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Backend not available');
+        }
+        
+        const { client_secret } = await response.json();
+        
+        // Now confirm the payment with the client secret
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/success.html`,
+          },
+        });
+
+        if (error) {
+          if (error.type === 'card_error' || error.type === 'validation_error') {
+            showMessage(error.message);
+          } else {
+            showMessage('An unexpected error occurred.');
+          }
+        }
+        
+      } catch (error) {
+        showMessage('Backend server is required to process payments. Please set up the backend endpoint first.');
+      }
+
+      setLoading(false);
+    }
+
+    function showMessage(messageText) {
+      const messageContainer = document.querySelector('#payment-message');
+      const demoNotice = document.querySelector('#demo-notice');
+      
+      if (messageText) {
+        // Hide demo notice and show error message
+        if (demoNotice) demoNotice.style.display = 'none';
+        messageContainer.innerHTML = messageText;
+        messageContainer.classList.add('error');
+        messageContainer.classList.remove('success');
+      } else {
+        // Clear message and show demo notice
+        messageContainer.classList.remove('error', 'success');
+        if (demoNotice) {
+          demoNotice.style.display = 'block';
+          messageContainer.innerHTML = '<div id="demo-notice" style="font-size: 0.9rem; color: #666; text-align: center; margin-top: 10px;">Payment form is ready. Backend server required for processing.</div>';
+        }
+      }
+    }
+
+    function setLoading(isLoading) {
+      const submitButton = document.querySelector('#submit-payment');
+      const buttonText = document.querySelector('#button-text');
+      
+      if (isLoading) {
+        submitButton.disabled = true;
+        buttonText.textContent = 'Processing...';
+      } else {
+        submitButton.disabled = false;
+        buttonText.textContent = 'Complete Pre-Order';
+      }
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelector('#payment-form').addEventListener('submit', handleSubmit);
+      
+      // Close modal when clicking outside
+      document.getElementById('stripe-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeStripeModal();
+        }
+      });
+      
+      // Close modal with Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeStripeModal();
+        }
+      });
+    });
+
+    // Make functions available globally
+    window.toggleMenu = toggleMenu;
+    window.closeMenu = closeMenu;
+    window.changeQuantity = changeQuantity;
+    window.initiateCheckout = initiateCheckout;
+    window.closeStripeModal = closeStripeModal;
+  </script>
+  <script src="theme.js"></script>
+</body>
+</html> 

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Confirmed - SAM'S SALT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Complete header styling to override everything */
+    header {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 80px !important;
+      background: rgba(0, 0, 0, 0.95) !important;
+      backdrop-filter: blur(20px) !important;
+      border-bottom: 1px solid #66B3A9 !important;
+      z-index: 10002 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 0 15px !important;
+      box-sizing: border-box !important;
+    }
+    
+    .logo {
+      font-size: 2rem !important;
+      font-weight: 900 !important;
+      color: #66B3A9 !important;
+      text-decoration: none !important;
+      letter-spacing: 2px !important;
+    }
+    
+    nav {
+      display: none !important;
+    }
+    
+    nav a {
+      display: none !important;
+    }
+    
+    .hamburger {
+      display: flex !important;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 8px;
+      background: rgba(102, 179, 169, 0.2);
+      border: 2px solid #66B3A9;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      z-index: 99999 !important;
+      min-width: 41px;
+      min-height: 41px;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      margin-left: 20px;
+      pointer-events: auto !important;
+      position: relative !important;
+    }
+    
+    .hamburger:hover {
+      background: rgba(102, 179, 169, 0.3) !important;
+      transform: scale(1.05);
+    }
+    
+    .hamburger:active {
+      transform: scale(0.95);
+    }
+    
+    .hamburger span {
+      width: 25px !important;
+      height: 3px !important;
+      background: #66B3A9 !important;
+      margin: 3px 0 !important;
+      transition: 0.3s !important;
+      border-radius: 2px !important;
+      display: block !important;
+    }
+    
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px) !important;
+    }
+    
+    .hamburger.active span:nth-child(2) {
+      opacity: 0 !important;
+    }
+    
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px) !important;
+    }
+    
+    /* Navigation Dropdown */
+    .mobile-nav {
+      position: fixed !important;
+      top: 80px !important;
+      left: 0 !important;
+      width: 100% !important;
+      background: rgba(0, 0, 0, 0.95) !important;
+      backdrop-filter: blur(20px) !important;
+      border-bottom: 1px solid #66B3A9 !important;
+      z-index: 9999 !important;
+      transform: translateY(-100%) !important;
+      transition: transform 0.3s ease !important;
+      display: block !important;
+    }
+    
+    .mobile-nav.open {
+      transform: translateY(0) !important;
+    }
+    
+    .mobile-nav a {
+      display: block !important;
+      color: #66B3A9 !important;
+      text-decoration: none !important;
+      padding: 15px 20px !important;
+      font-size: 1.1rem !important;
+      font-weight: 600 !important;
+      border-bottom: 1px solid rgba(102, 179, 169, 0.2) !important;
+      transition: all 0.3s ease !important;
+    }
+    
+    .mobile-nav a:hover {
+      background: rgba(102, 179, 169, 0.1) !important;
+      color: var(--white) !important;
+    }
+
+    body {
+      background: #000;
+      color: var(--teal);
+      padding-top: 80px;
+      text-align: center;
+    }
+
+    .success-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    .success-icon {
+      font-size: 4rem;
+      color: var(--teal);
+      margin-bottom: 30px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .success-title {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 20px;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .success-message {
+      font-size: 1.2rem;
+      color: var(--cream);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .order-details {
+      background: rgba(102, 179, 169, 0.1);
+      border: 2px solid rgba(102, 179, 169, 0.3);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 40px;
+    }
+
+    .order-details h3 {
+      color: var(--teal);
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .order-info {
+      color: var(--cream);
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: var(--gradient-1);
+      color: var(--black);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--teal);
+      border: 2px solid var(--teal);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(102, 179, 169, 0.3);
+    }
+
+    @media (max-width: 600px) {
+      .success-title {
+        font-size: 2rem;
+      }
+      
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html" class="logo">SAM'S SALT</a>
+    <button id="hamburger" onclick="toggleMenu()" class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </header>
+
+  <!-- Mobile Navigation -->
+  <div id="mobile-nav" class="mobile-nav">
+    <a href="index.html">Home</a>
+    <a href="order.html">Order Now</a>
+    <a href="calculator.html">Sodium Calculator</a>
+    <a href="contact.html">Contact</a>
+  </div>
+
+  <div class="success-container">
+    <div class="success-icon">✅</div>
+    <h1 class="success-title">Order Confirmed!</h1>
+    <p class="success-message">
+      Thank you for your order! Your payment has been processed successfully. 
+      You'll receive an email confirmation shortly with your order details.
+    </p>
+    
+    <div class="order-details">
+      <h3>Order Summary</h3>
+      <div class="order-info" id="order-product">Product: Loading...</div>
+      <div class="order-info" id="order-quantity">Quantity: Loading...</div>
+      <div class="order-info" id="order-total">Total: Loading...</div>
+    </div>
+
+    <div class="cta-buttons">
+      <a href="index.html" class="btn btn-primary">Return Home</a>
+      <a href="order.html" class="btn btn-secondary">Order More</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>SAM'S SALT</h4>
+          <p>Premium electrolytes for those who go further.</p>
+        </div>
+                  <div class="footer-section">
+            <h4>Quick Links</h4>
+            <a href="calculator.html">Sodium Calculator</a>
+            <a href="order.html">Order Now</a>
+          </div>
+        <div class="footer-section">
+          <h4>Contact</h4>
+          <a href="mailto:contactsamssalt@gmail.com">contactsamssalt@gmail.com</a>
+          <p>Salt Lake City, UT</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 SAM'S SALT. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Get order details from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntentId = urlParams.get('payment_intent');
+    const sessionId = urlParams.get('session_id'); // Keep for backward compatibility
+    
+    if (paymentIntentId || sessionId) {
+      // In a real application, you would fetch order details from your server
+      // For now, we'll show placeholder data
+      document.getElementById('order-product').textContent = 'Product: SAM\'S SALT Electrolytes';
+      document.getElementById('order-quantity').textContent = 'Quantity: 1';
+      document.getElementById('order-total').textContent = 'Total: $24.99';
+    }
+  </script>
+  <script>
+    // Simple hamburger toggle function
+    function toggleMenu() {
+      const hamburger = document.getElementById('hamburger');
+      const mobileNav = document.getElementById('mobile-nav');
+      
+      if (hamburger && mobileNav) {
+        const isOpen = mobileNav.classList.contains('open');
+        
+        if (isOpen) {
+          mobileNav.classList.remove('open');
+          hamburger.classList.remove('active');
+        } else {
+          mobileNav.classList.add('open');
+          hamburger.classList.add('active');
+        }
+      }
+    }
+    
+    // Make sure function is available globally
+    window.toggleMenu = toggleMenu;
+  </script>
+</body>
+</html> 
